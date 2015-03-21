@@ -108,7 +108,7 @@ SERVICE_PASSWORD=$our_pw
 ADMIN_PASSWORD=$our_pw
 
 # Include all services that should be installed using git rather that pip in this variable
-LIBS_FROM_GIT=python-neutronclient
+LIBS_FROM_GIT=neutron,python-neutronclient
 
 GIT_BASE=https://github.com
 

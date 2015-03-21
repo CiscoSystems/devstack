@@ -103,7 +103,7 @@ N1KV_VLAN_NET_SEGMENT_RANGE=101-499
 Q_CISCO_CSR1KV_QCOW2_IMAGE=<SET THIS VARIABLE!!!>
 
 # Include all services that should be installed using git rather that pip in this variable
-LIBS_FROM_GIT=python-neutronclient,horizon
+LIBS_FROM_GIT=neutron,python-neutronclient,horizon
 
 GIT_BASE=https://github.com
 
