@@ -63,6 +63,7 @@ IRONIC_TEMPLATES_DIR=${IRONIC_TEMPLATES_DIR:-$TOP_DIR/tools/ironic/templates}
 IRONIC_BAREMETAL_BASIC_OPS=$(trueorfalse False IRONIC_BAREMETAL_BASIC_OPS)
 IRONIC_ENABLED_DRIVERS=${IRONIC_ENABLED_DRIVERS:-fake,pxe_ssh,pxe_ipmitool}
 IRONIC_SSH_USERNAME=${IRONIC_SSH_USERNAME:-`whoami`}
+IRONIC_SSH_TIMEOUT=${IRONIC_SSH_TIMEOUT:-15}
 IRONIC_SSH_KEY_DIR=${IRONIC_SSH_KEY_DIR:-$IRONIC_DATA_DIR/ssh_keys}
 IRONIC_SSH_KEY_FILENAME=${IRONIC_SSH_KEY_FILENAME:-ironic_key}
 IRONIC_KEY_FILE=${IRONIC_KEY_FILE:-$IRONIC_SSH_KEY_DIR/$IRONIC_SSH_KEY_FILENAME}
@@ -233,21 +234,13 @@ function cleanup_ironic {
 # configure_ironic_dirs() - Create all directories required by Ironic and
 # associated services.
 function configure_ironic_dirs {
-    if [[ ! -d $IRONIC_CONF_DIR ]]; then
-        sudo mkdir -p $IRONIC_CONF_DIR
-    fi
+    sudo install -d -o $STACK_USER $IRONIC_CONF_DIR $STACK_USER $IRONIC_DATA_DIR \
+        $IRONIC_STATE_PATH $IRONIC_TFTPBOOT_DIR $IRONIC_TFTPBOOT_DIR/pxelinux.cfg
+    sudo chown -R $STACK_USER:$LIBVIRT_GROUP $IRONIC_TFTPBOOT_DIR
 
     if [[ "$IRONIC_IPXE_ENABLED" == "True" ]] ; then
-        sudo mkdir -p $IRONIC_HTTP_DIR
-        sudo chown -R $STACK_USER:$LIBVIRT_GROUP $IRONIC_HTTP_DIR
+        sudo install -d -o $STACK_USER -g $LIBVIRT_GROUP $IRONIC_HTTP_DIR
     fi
-
-    sudo mkdir -p $IRONIC_DATA_DIR
-    sudo mkdir -p $IRONIC_STATE_PATH
-    sudo mkdir -p $IRONIC_TFTPBOOT_DIR
-    sudo chown -R $STACK_USER $IRONIC_DATA_DIR $IRONIC_STATE_PATH
-    sudo chown -R $STACK_USER:$LIBVIRT_GROUP $IRONIC_TFTPBOOT_DIR
-    mkdir -p $IRONIC_TFTPBOOT_DIR/pxelinux.cfg
 
     if [ ! -f $IRONIC_PXE_BOOT_IMAGE ]; then
         die $LINENO "PXE boot file $IRONIC_PXE_BOOT_IMAGE not found."
@@ -267,13 +260,12 @@ function configure_ironic_dirs {
 # configure_ironic() - Set config files, create data dirs, etc
 function configure_ironic {
     configure_ironic_dirs
-    sudo chown $STACK_USER $IRONIC_CONF_DIR
 
     # Copy over ironic configuration file and configure common parameters.
     cp $IRONIC_DIR/etc/ironic/ironic.conf.sample $IRONIC_CONF_FILE
     iniset $IRONIC_CONF_FILE DEFAULT debug True
     inicomment $IRONIC_CONF_FILE DEFAULT log_file
-    iniset $IRONIC_CONF_FILE DEFAULT sql_connection `database_connection_url ironic`
+    iniset $IRONIC_CONF_FILE database connection `database_connection_url ironic`
     iniset $IRONIC_CONF_FILE DEFAULT state_path $IRONIC_STATE_PATH
     iniset $IRONIC_CONF_FILE DEFAULT use_syslog $SYSLOG
     # Configure Ironic conductor, if it was enabled.
@@ -313,7 +305,7 @@ function configure_ironic_api {
     iniset $IRONIC_CONF_FILE keystone_authtoken cafile $SSL_BUNDLE_FILE
     iniset $IRONIC_CONF_FILE keystone_authtoken signing_dir $IRONIC_AUTH_CACHE_DIR/api
 
-    iniset_rpc_backend ironic $IRONIC_CONF_FILE DEFAULT
+    iniset_rpc_backend ironic $IRONIC_CONF_FILE
     iniset $IRONIC_CONF_FILE api port $IRONIC_SERVICE_PORT
 
     cp -p $IRONIC_DIR/etc/ironic/policy.json $IRONIC_POLICY_JSON
@@ -427,6 +419,11 @@ function create_ironic_accounts {
 
 # init_ironic() - Initialize databases, etc.
 function init_ironic {
+    # Save private network as cleaning network
+    local cleaning_network_uuid
+    cleaning_network_uuid=$(neutron net-list | grep private | get_field 1)
+    iniset $IRONIC_CONF_FILE neutron cleaning_network_uuid ${cleaning_network_uuid}
+
     # (Re)create  ironic database
     recreate_database ironic
 
@@ -703,7 +700,7 @@ function ironic_ssh_check {
 
 function configure_ironic_auxiliary {
     configure_ironic_ssh_keypair
-    ironic_ssh_check $IRONIC_KEY_FILE $IRONIC_VM_SSH_ADDRESS $IRONIC_VM_SSH_PORT $IRONIC_SSH_USERNAME 10
+    ironic_ssh_check $IRONIC_KEY_FILE $IRONIC_VM_SSH_ADDRESS $IRONIC_VM_SSH_PORT $IRONIC_SSH_USERNAME $IRONIC_SSH_TIMEOUT
 }
 
 function build_ipa_coreos_ramdisk {

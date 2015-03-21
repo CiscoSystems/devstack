@@ -23,7 +23,7 @@
 
 # check if someone has invoked with "sh"
 if [[ "${POSIXLY_CORRECT}" == "y" ]]; then
-    echo "You appear to be running bash in POSIX compatability mode."
+    echo "You appear to be running bash in POSIX compatibility mode."
     echo "devstack uses bash features. \"./stack.sh\" should do the right thing"
     exit 1
 fi
@@ -749,6 +749,9 @@ if is_service_enabled keystone; then
 fi
 
 if is_service_enabled s-proxy; then
+    if is_service_enabled ceilometer; then
+        install_ceilometermiddleware
+    fi
     stack_install_service swift
     configure_swift
 
@@ -978,7 +981,7 @@ if is_service_enabled keystone; then
         create_swift_accounts
     fi
 
-    if is_service_enabled heat && [[ "$HEAT_STANDALONE" != "True" ]]; then
+    if is_service_enabled heat; then
         create_heat_accounts
     fi
 
@@ -1317,6 +1320,15 @@ service_check
 # Prepare bash completion for OSC
 openstack complete | sudo tee /etc/bash_completion.d/osc.bash_completion > /dev/null
 
+# If cinder is configured, set global_filter for PV devices
+if is_service_enabled cinder; then
+    if is_ubuntu; then
+        echo_summary "Configuring lvm.conf global device filter"
+        set_lvm_filter
+    else
+        echo_summary "Skip setting lvm filters for non Ubuntu systems"
+    fi
+fi
 
 # Fin
 # ===

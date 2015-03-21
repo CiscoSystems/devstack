@@ -66,7 +66,7 @@ BUILD_TIMEOUT=${BUILD_TIMEOUT:-196}
 # This must be False on stable branches, as master tempest
 # deps do not match stable branch deps. Set this to True to
 # have tempest installed in devstack by default.
-INSTALL_TEMPEST=${INSTALL_TEMPEST:-"False"}
+INSTALL_TEMPEST=${INSTALL_TEMPEST:-"True"}
 
 
 BOTO_MATERIALS_PATH="$FILES/images/s3-materials/cirros-${CIRROS_VERSION}"
@@ -170,12 +170,8 @@ function configure_tempest {
 
     # Create tempest.conf from tempest.conf.sample
     # copy every time, because the image UUIDS are going to change
-    if [[ ! -d $TEMPEST_CONFIG_DIR ]]; then
-        sudo mkdir -p $TEMPEST_CONFIG_DIR
-    fi
-    sudo chown $STACK_USER $TEMPEST_CONFIG_DIR
-    cp $TEMPEST_DIR/etc/tempest.conf.sample $TEMPEST_CONFIG
-    chmod 644 $TEMPEST_CONFIG
+    sudo install -d -o $STACK_USER $TEMPEST_CONFIG_DIR
+    install -m 644 $TEMPEST_DIR/etc/tempest.conf.sample $TEMPEST_CONFIG
 
     password=${ADMIN_PASSWORD:-secrete}
 
@@ -275,7 +271,7 @@ function configure_tempest {
 
     iniset $TEMPEST_CONFIG DEFAULT use_syslog $SYSLOG
     # Oslo
-    iniset $TEMPEST_CONFIG DEFAULT lock_path $TEMPEST_STATE_PATH
+    iniset $TEMPEST_CONFIG oslo_concurrency lock_path $TEMPEST_STATE_PATH
     mkdir -p $TEMPEST_STATE_PATH
     iniset $TEMPEST_CONFIG DEFAULT use_stderr False
     iniset $TEMPEST_CONFIG DEFAULT log_file tempest.log
@@ -315,6 +311,9 @@ function configure_tempest {
 
     # Auth
     iniset $TEMPEST_CONFIG auth allow_tenant_isolation ${TEMPEST_ALLOW_TENANT_ISOLATION:-True}
+    if [[ "$TEMPEST_AUTH_VERSION" == "v3" ]]; then
+        iniset $TEMPEST_CONFIG auth tempest_roles "Member"
+    fi
 
     # Compute
     iniset $TEMPEST_CONFIG compute ssh_user ${DEFAULT_INSTANCE_USER:-cirros} # DEPRECATED
@@ -349,6 +348,8 @@ function configure_tempest {
     iniset $TEMPEST_CONFIG compute-feature-enabled change_password False
     iniset $TEMPEST_CONFIG compute-feature-enabled block_migration_for_live_migration ${USE_BLOCK_MIGRATION_FOR_LIVE_MIGRATION:-False}
     iniset $TEMPEST_CONFIG compute-feature-enabled api_extensions $compute_api_extensions
+    # TODO(mriedem): Remove the preserve_ports flag when Juno is end of life.
+    iniset $TEMPEST_CONFIG compute-feature-enabled preserve_ports True
 
     # Compute admin
     iniset $TEMPEST_CONFIG "compute-admin" username $ADMIN_USERNAME
@@ -396,6 +397,7 @@ function configure_tempest {
         fi
         iniset $TEMPEST_CONFIG orchestration instance_type "m1.heat"
         iniset $TEMPEST_CONFIG orchestration build_timeout 900
+        iniset $TEMPEST_CONFIG orchestration stack_owner_role "_member_"
     fi
 
     # Scenario

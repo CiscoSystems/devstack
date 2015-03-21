@@ -101,23 +101,14 @@ function cleanup_sahara {
 
 # configure_sahara() - Set config files, create data dirs, etc
 function configure_sahara {
-
-    if [[ ! -d $SAHARA_CONF_DIR ]]; then
-        sudo mkdir -p $SAHARA_CONF_DIR
-    fi
-    sudo chown $STACK_USER $SAHARA_CONF_DIR
+    sudo install -d -o $STACK_USER $SAHARA_CONF_DIR
 
     if [[ -f $SAHARA_DIR/etc/sahara/policy.json ]]; then
         cp -p $SAHARA_DIR/etc/sahara/policy.json $SAHARA_CONF_DIR
     fi
 
-    # Copy over sahara configuration file and configure common parameters.
-    cp $SAHARA_DIR/etc/sahara/sahara.conf.sample $SAHARA_CONF_FILE
-
     # Create auth cache dir
-    sudo mkdir -p $SAHARA_AUTH_CACHE_DIR
-    sudo chown $STACK_USER $SAHARA_AUTH_CACHE_DIR
-    sudo chmod 700 $SAHARA_AUTH_CACHE_DIR
+    sudo install -d -o $STACK_USER -m 700 $SAHARA_AUTH_CACHE_DIR
     rm -rf $SAHARA_AUTH_CACHE_DIR/*
 
     configure_auth_token_middleware $SAHARA_CONF_FILE sahara $SAHARA_AUTH_CACHE_DIR
@@ -127,7 +118,7 @@ function configure_sahara {
     if is_service_enabled ceilometer; then
         iniset $SAHARA_CONF_FILE DEFAULT enable_notifications "true"
         iniset $SAHARA_CONF_FILE DEFAULT notification_driver "messaging"
-        iniset_rpc_backend sahara $SAHARA_CONF_FILE DEFAULT
+        iniset_rpc_backend sahara $SAHARA_CONF_FILE
     fi
 
     iniset $SAHARA_CONF_FILE DEFAULT verbose True
