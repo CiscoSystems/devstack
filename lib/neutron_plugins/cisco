@@ -853,7 +853,7 @@ function _configure_n1kv_subplugin {
     # Setup the integration bridge by calling the ovs_base
     OVS_BRIDGE=$Q_CISCO_PLUGIN_INTEGRATION_BRIDGE
     _neutron_ovs_base_setup_bridge $OVS_BRIDGE
-    
+
     # Configure uVEM on compute nodes
     if is_service_enabled n-cpu; then
         _configure_uvem
@@ -911,7 +911,7 @@ function neutron_plugin_configure_service {
 }
 
 function neutron_plugin_create_initial_network_profile {
-    neutron cisco-network-profile-create default_network_profile vlan --segment_range 1-3000 --physical_network "$1"
+    neutron cisco-network-profile-create --segment_range $N1KV_VLAN_NET_SEGMENT_RANGE --physical_network $1 $N1KV_VLAN_NET_PROFILE_NAME vlan
 }
 
 function neutron_plugin_setup_interface_driver {

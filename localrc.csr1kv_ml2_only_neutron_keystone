@@ -12,7 +12,6 @@ RECLONE=yes
 DEST=/opt/stack
 
 # Logging
-# -------
 LOGDIR=$TOP_DIR/logs
 SCREEN_LOGDIR=$DEST/logs
 LOGFILE=$LOGDIR/stack.sh.log
@@ -50,6 +49,8 @@ disable_service horizon
 
 disable_service tempest
 
+# Set this to True if CSR1kv setup scripts for Nova and Glance should be executed
+# If you won't use CSR1kv you can leave it as False.
 Q_CISCO_CONFIGURE_NOVA_AND_GLANCE=False
 
 enable_service neutron
@@ -106,6 +107,9 @@ SERVICE_TOKEN=$our_pw
 SERVICE_PASSWORD=$our_pw
 ADMIN_PASSWORD=$our_pw
 
+# Include all services that should be installed using git rather that pip in this variable
+LIBS_FROM_GIT=python-neutronclient
+
 GIT_BASE=https://github.com
 
 # Global Openstack requirements
@@ -121,5 +125,5 @@ NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
 NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
 
 # Horizon
-HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
-HORIZON_BRANCH=bobmel/device_manager_plugin
+#HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
+#HORIZON_BRANCH=bobmel/device_manager_plugin

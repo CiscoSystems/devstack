@@ -592,15 +592,7 @@ function create_neutron_initial_network {
         sudo ip link set br-int up
         sudo ip link set $PUBLIC_INTERFACE up
     else
-	if [[ "$Q_PLUGIN" == "cisco" ]]; then
-            if _has_n1kv_subplugin; then
-	        N1KV_VLAN_NET_SEGMENT_RANGE=${N1KV_VLAN_NET_SEGMENT_RANGE:-"101-499"} 
-	        N1KV_VLAN_NET_PROFILE_NAME=${N1KV_VLAN_NET_PROFILE_NAME:-default_network_profile}
-	        PROFILE_ID=$(neutron cisco-network-profile-create --segment_range $N1KV_VLAN_NET_SEGMENT_RANGE --physical_network p1 $N1KV_VLAN_NET_PROFILE_NAME vlan | grep ' id ' | get_field 2)
-                PROFILE_ARG="--n1kv:profile-id=$PROFILE_ID"
-            fi
-        fi
-        NET_ID=$(neutron net-create $PROFILE_ARG --tenant-id $TENANT_ID "$PRIVATE_NETWORK_NAME" | grep ' id ' | get_field 2)
+        NET_ID=$(neutron net-create --tenant-id $TENANT_ID "$PRIVATE_NETWORK_NAME" | grep ' id ' | get_field 2)
         die_if_not_set $LINENO NET_ID "Failure creating NET_ID for $PHYSICAL_NETWORK $TENANT_ID"
 
         if [[ "$IP_VERSION" =~ 4.* ]]; then
