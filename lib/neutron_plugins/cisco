@@ -866,7 +866,7 @@ function neutron_plugin_configure_plugin_agent {
     else
         if _has_n1kv_subplugin; then
             OVS_BRIDGE=$Q_CISCO_PLUGIN_INTEGRATION_BRIDGE
-            _quantum_ovs_base_setup_bridge $OVS_BRIDGE
+            _neutron_ovs_base_setup_bridge $OVS_BRIDGE
             # Assuming q-agt will be enabled on all the compute nodes
             # uVEM is only configured/installed with q-agt enabled
             _configure_uvem
