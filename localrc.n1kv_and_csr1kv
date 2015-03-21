@@ -115,5 +115,5 @@ NEUTRON_BRANCH=bobmel/device_manager_plugin
 #NEUTRONCLIENT_BRANCH=
 
 # Horizon
-#HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
-#HORIZON_BRANCH=
+HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
+HORIZON_BRANCH=bobmel/device_manager_plugin

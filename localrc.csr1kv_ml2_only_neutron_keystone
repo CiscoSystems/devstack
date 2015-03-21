@@ -121,5 +121,5 @@ NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
 NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
 
 # Horizon
-#HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
-#HORIZON_BRANCH=
+HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
+HORIZON_BRANCH=bobmel/device_manager_plugin
