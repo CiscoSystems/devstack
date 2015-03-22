@@ -12,6 +12,7 @@ RECLONE=yes
 DEST=/opt/stack
 
 # Logging
+LOG_COLOR=True
 LOGDIR=$TOP_DIR/logs
 SCREEN_LOGDIR=$DEST/logs
 LOGFILE=$LOGDIR/stack.sh.log
@@ -100,7 +101,8 @@ PUBLIC_BRIDGE=br-int
 
 our_pw=simple
 # Must use hard coded value, as scripts grep for the following variables.
-MYSQL_PASSWORD=simple
+DATABASE_PASSWORD=$our_pw
+MYSQL_PASSWORD=$DATABASE_PASSWORD
 MYSQL_USER=stacker
 RABBIT_PASSWORD=$our_pw
 SERVICE_TOKEN=$our_pw

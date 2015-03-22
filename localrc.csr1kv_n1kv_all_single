@@ -37,7 +37,8 @@ PUBLIC_BRIDGE=br-int
 
 our_pw=<SET THIS VARIABLE!!!>
 # Must use hard coded value, as scripts grep for the following variables.
-MYSQL_PASSWORD=<SET THIS VARIABLE!!!>
+DATABASE_PASSWORD=<SET THIS VARIABLE!!!>
+MYSQL_PASSWORD=$DATABASE_PASSWORD
 RABBIT_PASSWORD=$our_pw
 SERVICE_TOKEN=$our_pw
 SERVICE_PASSWORD=$our_pw
@@ -59,6 +60,7 @@ enable_service q-ciscodevicemanager
 DEST=/opt/stack
 
 # Logging
+LOG_COLOR=True
 LOGDIR=$TOP_DIR/logs
 SCREEN_LOGDIR=$DEST/logs
 LOGFILE=$LOGDIR/stack.sh.log
@@ -116,8 +118,8 @@ NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
 NEUTRON_BRANCH=bobmel/device_manager_plugin
 
 # Neutron client
-#NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-#NEUTRONCLIENT_BRANCH=
+NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
+NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
 
 # Horizon
 HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
