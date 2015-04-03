@@ -14,7 +14,9 @@ description="Neutron router implemented in Cisco CSR1kv device"
 template_id=2
 shared=True
 slot_need=10
-scheduler=neutron.plugins.cisco.l3.scheduler.l3_router_hosting_device_scheduler.L3RouterHostingDeviceScheduler
+scheduler=neutron.plugins.cisco.l3.schedulers.l3_router_hosting_device_scheduler.L3RouterHostingDeviceScheduler
+driver=neutron.plugins.cisco.l3.drivers.noop_routertype_driver.NoopL3RouterDriver
+cfg_agent_service_helper=neutron.plugins.cisco.cfg_agent.service_helpers.routing_svc_helper.RoutingServiceHelper
 cfg_agent_driver=neutron.plugins.cisco.cfg_agent.device_drivers.csr1kv.csr1kv_routing_driver.CSR1kvRoutingDriver
 
 [cisco_router_type:3]
@@ -23,5 +25,7 @@ description="Neutron router implemented in Cisco ASR1k device"
 template_id=3
 shared=True
 slot_need=2
-scheduler=neutron.plugins.cisco.l3.scheduler.l3_router_hosting_device_scheduler.L3RouterHostingDeviceScheduler
+scheduler=neutron.plugins.cisco.l3.schedulers.l3_router_hosting_device_scheduler.L3RouterHostingDeviceScheduler
+driver=neutron.plugins.cisco.l3.drivers.asr1k.asr1k_routertype_driver.ASR1kL3RouterDriver
+cfg_agent_service_helper=neutron.plugins.cisco.cfg_agent.service_helpers.routing_svc_helper.RoutingServiceHelper
 cfg_agent_driver=neutron.plugins.cisco.cfg_agent.device_drivers.asr1k.asr1k_routing_driver.ASR1kRoutingDriver

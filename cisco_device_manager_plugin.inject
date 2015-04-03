@@ -42,7 +42,7 @@ device_driver=neutron.plugins.cisco.device_manager.hosting_device_drivers.csr1kv
 plugging_driver=neutron.plugins.cisco.device_manager.plugging_drivers.n1kv_trunking_driver.N1kvTrunkingPlugDriver
 
 [cisco_hosting_device_template:3]
-name="ASR1kv template"
+name="ASR1k template"
 enabled=True
 host_category=Hardware
 service_types=router:FW:VPN
