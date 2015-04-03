@@ -32,9 +32,16 @@ set +o xtrace
 
 # Set up default directories
 GITDIR["python-novaclient"]=$DEST/python-novaclient
-
-
 NOVA_DIR=$DEST/nova
+
+# Nova virtual environment
+if [[ ${USE_VENV} = True ]]; then
+    PROJECT_VENV["nova"]=${NOVA_DIR}.venv
+    NOVA_BIN_DIR=${PROJECT_VENV["nova"]}/bin
+else
+    NOVA_BIN_DIR=$(get_python_exec_prefix)
+fi
+
 NOVA_STATE_PATH=${NOVA_STATE_PATH:=$DATA_DIR/nova}
 # INSTANCES_PATH is the previous name for this
 NOVA_INSTANCES_PATH=${NOVA_INSTANCES_PATH:=${INSTANCES_PATH:=$NOVA_STATE_PATH/instances}}
@@ -48,8 +55,9 @@ NOVA_CELLS_DB=${NOVA_CELLS_DB:-nova_cell}
 
 NOVA_API_PASTE_INI=${NOVA_API_PASTE_INI:-$NOVA_CONF_DIR/api-paste.ini}
 # NOVA_API_VERSION valid options
-#   - default - setup API end points as nova does out of the box
-#   - v21default - make v21 the default on /v2
+# - default - setup API end points as nova does out of the box
+# - v21default - make v21 the default on /v2
+#
 # NOTE(sdague): this is for transitional testing of the Nova v21 API.
 # Expect to remove in L or M.
 NOVA_API_VERSION=${NOVA_API_VERSION-default}
@@ -69,19 +77,9 @@ NOVA_SERVICE_PROTOCOL=${NOVA_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
 EC2_SERVICE_PORT=${EC2_SERVICE_PORT:-8773}
 EC2_SERVICE_PORT_INT=${EC2_SERVICE_PORT_INT:-18773}
 
-# Support entry points installation of console scripts
-if [[ -d $NOVA_DIR/bin ]]; then
-    NOVA_BIN_DIR=$NOVA_DIR/bin
-else
-    NOVA_BIN_DIR=$(get_python_exec_prefix)
-fi
-
-# Set the paths of certain binaries
-NOVA_ROOTWRAP=$(get_rootwrap_location nova)
-
 # Option to enable/disable config drive
-# NOTE: Set FORCE_CONFIG_DRIVE="False" to turn OFF config drive
-FORCE_CONFIG_DRIVE=${FORCE_CONFIG_DRIVE:-"always"}
+# NOTE: Set ``FORCE_CONFIG_DRIVE="False"`` to turn OFF config drive
+FORCE_CONFIG_DRIVE=${FORCE_CONFIG_DRIVE:-"True"}
 
 # Nova supports pluggable schedulers.  The default ``FilterScheduler``
 # should work in most cases.
@@ -92,11 +90,11 @@ QEMU_CONF=/etc/libvirt/qemu.conf
 # Set default defaults here as some hypervisor drivers override these
 PUBLIC_INTERFACE_DEFAULT=br100
 FLAT_NETWORK_BRIDGE_DEFAULT=br100
-# set the GUEST_INTERFACE_DEFAULT to some interface on the box so that
-# the default isn't completely crazy. This will match eth*, em*, or
-# the new p* interfaces, then basically picks the first
+# Set ``GUEST_INTERFACE_DEFAULT`` to some interface on the box so that
+# the default isn't completely crazy. This will match ``eth*``, ``em*``, or
+# the new ``p*`` interfaces, then basically picks the first
 # alphabetically. It's probably wrong, however it's less wrong than
-# always using 'eth0' which doesn't exist on new Linux distros at all.
+# always using ``eth0`` which doesn't exist on new Linux distros at all.
 GUEST_INTERFACE_DEFAULT=$(ip link \
     | grep 'state UP' \
     | awk '{print $2}' \
@@ -104,8 +102,8 @@ GUEST_INTERFACE_DEFAULT=$(ip link \
     | grep ^[ep] \
     | head -1)
 
-# $NOVA_VNC_ENABLED can be used to forcibly enable vnc configuration.
-# In multi-node setups allows compute hosts to not run n-novnc.
+# ``NOVA_VNC_ENABLED`` can be used to forcibly enable VNC configuration.
+# In multi-node setups allows compute hosts to not run ``n-novnc``.
 NOVA_VNC_ENABLED=$(trueorfalse False NOVA_VNC_ENABLED)
 
 # Get hypervisor configuration
@@ -147,7 +145,7 @@ FLAT_INTERFACE=${FLAT_INTERFACE:-$GUEST_INTERFACE_DEFAULT}
 # running the VM - removing a SPOF and bandwidth bottleneck.
 MULTI_HOST=$(trueorfalse False MULTI_HOST)
 
-# ``NOVA_ALLOW_MOVE_TO_SAME_HOST` can be set to False in multi node devstack,
+# ``NOVA_ALLOW_MOVE_TO_SAME_HOST`` can be set to False in multi node DevStack,
 # where there are at least two nova-computes.
 NOVA_ALLOW_MOVE_TO_SAME_HOST=$(trueorfalse True NOVA_ALLOW_MOVE_TO_SAME_HOST)
 
@@ -225,33 +223,6 @@ function cleanup_nova {
     #fi
 }
 
-# configure_nova_rootwrap() - configure Nova's rootwrap
-function configure_nova_rootwrap {
-    # Deploy new rootwrap filters files (owned by root).
-    # Wipe any existing rootwrap.d files first
-    if [[ -d $NOVA_CONF_DIR/rootwrap.d ]]; then
-        sudo rm -rf $NOVA_CONF_DIR/rootwrap.d
-    fi
-
-    # Deploy filters to /etc/nova/rootwrap.d
-    sudo install -d -o root -g root -m 755 $NOVA_CONF_DIR/rootwrap.d
-    sudo install -o root -g root -m 644  $NOVA_DIR/etc/nova/rootwrap.d/*.filters $NOVA_CONF_DIR/rootwrap.d
-
-    # Set up rootwrap.conf, pointing to /etc/nova/rootwrap.d
-    sudo install -o root -g root -m 644 $NOVA_DIR/etc/nova/rootwrap.conf $NOVA_CONF_DIR
-    sudo sed -e "s:^filters_path=.*$:filters_path=$NOVA_CONF_DIR/rootwrap.d:" -i $NOVA_CONF_DIR/rootwrap.conf
-
-    # Specify rootwrap.conf as first parameter to nova-rootwrap
-    local rootwrap_sudoer_cmd="$NOVA_ROOTWRAP $NOVA_CONF_DIR/rootwrap.conf *"
-
-    # Set up the rootwrap sudoers for nova
-    local tempfile=`mktemp`
-    echo "$STACK_USER ALL=(root) NOPASSWD: $rootwrap_sudoer_cmd" >$tempfile
-    chmod 0440 $tempfile
-    sudo chown root:root $tempfile
-    sudo mv $tempfile /etc/sudoers.d/nova-rootwrap
-}
-
 # configure_nova() - Set config files, create data dirs, etc
 function configure_nova {
     # Put config files in ``/etc/nova`` for everyone to find
@@ -259,7 +230,7 @@ function configure_nova {
 
     install_default_policy nova
 
-    configure_nova_rootwrap
+    configure_rootwrap nova $NOVA_BIN_DIR/nova-rootwrap $NOVA_DIR/etc/nova
 
     if [[ "$ENABLED_SERVICES" =~ "n-api" ]]; then
         # Get the sample configuration file in place
@@ -696,6 +667,10 @@ function start_nova_api {
         service_protocol="http"
     fi
 
+    # Hack to set the path for rootwrap
+    local old_path=$PATH
+    export PATH=$NOVA_BIN_DIR:$PATH
+
     run_process n-api "$NOVA_BIN_DIR/nova-api"
     echo "Waiting for nova-api to start..."
     if ! wait_for_service $SERVICE_TIMEOUT $service_protocol://$SERVICE_HOST:$service_port; then
@@ -707,10 +682,16 @@ function start_nova_api {
         start_tls_proxy '*' $NOVA_SERVICE_PORT $NOVA_SERVICE_HOST $NOVA_SERVICE_PORT_INT &
         start_tls_proxy '*' $EC2_SERVICE_PORT $NOVA_SERVICE_HOST $EC2_SERVICE_PORT_INT &
     fi
+
+    export PATH=$old_path
 }
 
 # start_nova_compute() - Start the compute process
 function start_nova_compute {
+    # Hack to set the path for rootwrap
+    local old_path=$PATH
+    export PATH=$NOVA_BIN_DIR:$PATH
+
     if is_service_enabled n-cell; then
         local compute_cell_conf=$NOVA_CELLS_CONF
     else
@@ -738,10 +719,16 @@ function start_nova_compute {
         fi
         run_process n-cpu "$NOVA_BIN_DIR/nova-compute --config-file $compute_cell_conf"
     fi
+
+    export PATH=$old_path
 }
 
 # start_nova() - Start running processes, including screen
 function start_nova_rest {
+    # Hack to set the path for rootwrap
+    local old_path=$PATH
+    export PATH=$NOVA_BIN_DIR:$PATH
+
     local api_cell_conf=$NOVA_CONF
     if is_service_enabled n-cell; then
         local compute_cell_conf=$NOVA_CELLS_CONF
@@ -769,6 +756,8 @@ function start_nova_rest {
     # Swift will act as s3 objectstore.
     is_service_enabled swift3 || \
         run_process n-obj "$NOVA_BIN_DIR/nova-objectstore --config-file $api_cell_conf"
+
+    export PATH=$old_path
 }
 
 function start_nova {

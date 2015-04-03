@@ -41,8 +41,7 @@ Quick Start
 
 #. Configure
 
-   We recommend at least a :doc:`minimal
-   configuration <configuration>` be set up.
+   We recommend at least a :ref:`minimal-configuration` be set up.
 
 #. Start the install
 
@@ -68,6 +67,7 @@ Walk through various setups used by stackers
    guides/neutron
    guides/devstack-with-nested-kvm
    guides/nova
+   guides/devstack-with-lbaas-v2
 
 All-In-One Single VM
 --------------------
@@ -165,7 +165,7 @@ Scripts
 * `lib/ironic <lib/ironic.html>`__
 * `lib/keystone <lib/keystone.html>`__
 * `lib/ldap <lib/ldap.html>`__
-* `lib/neutron <lib/neutron.html>`__
+* `lib/neutron-legacy <lib/neutron-legacy.html>`__
 * `lib/nova <lib/nova.html>`__
 * `lib/oslo <lib/oslo.html>`__
 * `lib/rpc\_backend <lib/rpc_backend.html>`__
@@ -210,6 +210,8 @@ Tools
 -----
 
 * `tools/build\_docs.sh <tools/build_docs.sh.html>`__
+* `tools/build\_venv.sh <tools/build_venv.sh.html>`__
+* `tools/build\_wheels.sh <tools/build_wheels.sh.html>`__
 * `tools/create-stack-user.sh <tools/create-stack-user.sh.html>`__
 * `tools/create\_userrc.sh <tools/create_userrc.sh.html>`__
 * `tools/fixup\_stuff.sh <tools/fixup_stuff.sh.html>`__

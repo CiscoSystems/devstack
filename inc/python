@@ -52,17 +52,35 @@ function get_python_exec_prefix {
     fi
 }
 
+# Wrapper for ``pip install`` that only installs versions of libraries
+# from the global-requirements specification.
+#
+# Uses globals ``REQUIREMENTS_DIR``
+#
+# pip_install_gr packagename
+function pip_install_gr {
+    local name=$1
+    local clean_name=$(get_from_global_requirements $name)
+    pip_install $clean_name
+}
+
 # Wrapper for ``pip install`` to set cache and proxy environment variables
-# Uses globals ``INSTALL_TESTONLY_PACKAGES``, ``OFFLINE``, ``PIP_VIRTUAL_ENV``,
-# ``TRACK_DEPENDS``, ``*_proxy``
+# Uses globals ``OFFLINE``, ``PIP_VIRTUAL_ENV``,
+# ``PIP_UPGRADE``, ``TRACK_DEPENDS``, ``*_proxy``
 # pip_install package [package ...]
 function pip_install {
     local xtrace=$(set +o | grep xtrace)
     set +o xtrace
+    local upgrade=""
     local offline=${OFFLINE:-False}
     if [[ "$offline" == "True" || -z "$@" ]]; then
         $xtrace
         return
+    fi
+
+    PIP_UPGRADE=$(trueorfalse False PIP_UPGRADE)
+    if [[ "$PIP_UPGRADE" = "True" ]] ; then
+        upgrade="--upgrade"
     fi
 
     if [[ -z "$os_PACKAGE" ]]; then
@@ -98,21 +116,20 @@ function pip_install {
         https_proxy="${https_proxy:-}" \
         no_proxy="${no_proxy:-}" \
         PIP_FIND_LINKS=$PIP_FIND_LINKS \
-        $cmd_pip install \
+        $cmd_pip install $upgrade \
         $@
 
-    INSTALL_TESTONLY_PACKAGES=$(trueorfalse False INSTALL_TESTONLY_PACKAGES)
-    if [[ "$INSTALL_TESTONLY_PACKAGES" == "True" ]]; then
-        local test_req="$@/test-requirements.txt"
-        if [[ -e "$test_req" ]]; then
-            $sudo_pip \
-                http_proxy=${http_proxy:-} \
-                https_proxy=${https_proxy:-} \
-                no_proxy=${no_proxy:-} \
-                PIP_FIND_LINKS=$PIP_FIND_LINKS \
-                $cmd_pip install \
-                -r $test_req
-        fi
+    # Also install test requirements
+    local test_req="$@/test-requirements.txt"
+    if [[ -e "$test_req" ]]; then
+        echo "Installing test-requirements for $test_req"
+        $sudo_pip \
+            http_proxy=${http_proxy:-} \
+            https_proxy=${https_proxy:-} \
+            no_proxy=${no_proxy:-} \
+            PIP_FIND_LINKS=$PIP_FIND_LINKS \
+            $cmd_pip install $upgrade \
+            -r $test_req
     fi
 }
 
@@ -120,7 +137,7 @@ function pip_install {
 # get_from_global_requirements <package>
 function get_from_global_requirements {
     local package=$1
-    local required_pkg=$(grep -h ${package} $REQUIREMENTS_DIR/global-requirements.txt | cut -d\# -f1)
+    local required_pkg=$(grep -i -h ^${package} $REQUIREMENTS_DIR/global-requirements.txt | cut -d\# -f1)
     if [[ $required_pkg == ""  ]]; then
         die $LINENO "Can't find package $package in requirements"
     fi

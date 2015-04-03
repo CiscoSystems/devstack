@@ -6,7 +6,7 @@ psmisc
 gcc
 g++
 git
-graphviz # testonly - docs
+graphviz # needed for docs
 lsof # useful when debugging
 openssh-server
 openssl
@@ -23,3 +23,4 @@ libffi-dev
 libssl-dev # for pyOpenSSL
 gettext  # used for compiling message catalogs
 openjdk-7-jre-headless  # NOPRIME
+pkg-config

@@ -62,6 +62,9 @@ function trueorfalse {
     $xtrace
 }
 
+function isset {
+    [[ -v "$1" ]]
+}
 
 # Control Functions
 # =================
@@ -246,6 +249,7 @@ function GetOSVersion {
         # CentOS Linux release 6.0 (Final)
         # Fedora release 16 (Verne)
         # XenServer release 6.2.0-70446c (xenenterprise)
+        # Oracle Linux release 7
         os_CODENAME=""
         for r in "Red Hat" CentOS Fedora XenServer; do
             os_VENDOR=$r
@@ -259,6 +263,9 @@ function GetOSVersion {
             fi
             os_VENDOR=""
         done
+        if [ "$os_VENDOR" = "Red Hat" ] && [[ -r /etc/oracle-release ]]; then
+            os_VENDOR=OracleLinux
+        fi
         os_PACKAGE="rpm"
     elif [[ -r /etc/SuSE-release ]]; then
         for r in openSUSE "SUSE Linux"; do
@@ -310,7 +317,7 @@ function GetDistro {
         fi
     elif [[ "$os_VENDOR" =~ (Red Hat) || \
         "$os_VENDOR" =~ (CentOS) || \
-        "$os_VENDOR" =~ (OracleServer) ]]; then
+        "$os_VENDOR" =~ (OracleLinux) ]]; then
         # Drop the . release as we assume it's compatible
         DISTRO="rhel${os_RELEASE::1}"
     elif [[ "$os_VENDOR" =~ (XenServer) ]]; then
@@ -328,6 +335,17 @@ function is_arch {
     [[ "$(uname -m)" == "$1" ]]
 }
 
+# Determine if current distribution is an Oracle distribution
+# is_oraclelinux
+function is_oraclelinux {
+    if [[ -z "$os_VENDOR" ]]; then
+        GetOSVersion
+    fi
+
+    [ "$os_VENDOR" = "OracleLinux" ]
+}
+
+
 # Determine if current distribution is a Fedora-based distribution
 # (Fedora, RHEL, CentOS, etc).
 # is_fedora
@@ -337,7 +355,7 @@ function is_fedora {
     fi
 
     [ "$os_VENDOR" = "Fedora" ] || [ "$os_VENDOR" = "Red Hat" ] || \
-        [ "$os_VENDOR" = "CentOS" ] || [ "$os_VENDOR" = "OracleServer" ]
+        [ "$os_VENDOR" = "CentOS" ] || [ "$os_VENDOR" = "OracleLinux" ]
 }
 
 
@@ -750,6 +768,27 @@ function get_or_add_user_project_role {
     echo $user_role_id
 }
 
+# Gets or adds group role to project
+# Usage: get_or_add_group_project_role <role> <group> <project>
+function get_or_add_group_project_role {
+    # Gets group role id
+    local group_role_id=$(openstack role list \
+        --group $2 \
+        --project $3 \
+        --column "ID" \
+        --column "Name" \
+        | grep " $1 " | get_field 1)
+    if [[ -z "$group_role_id" ]]; then
+        # Adds role to group
+        group_role_id=$(openstack role add \
+            $1 \
+            --group $2 \
+            --project $3 \
+            | grep " id " | get_field 2)
+    fi
+    echo $group_role_id
+}
+
 # Gets or creates service
 # Usage: get_or_create_service <name> <type> <description>
 function get_or_create_service {
@@ -868,16 +907,6 @@ function _parse_package_files {
                 fi
             fi
 
-            # Look for # testonly in comment
-            if [[ $line =~ (.*)#.*testonly.* ]]; then
-                package=${BASH_REMATCH[1]}
-                # Are we installing test packages? (test for the default value)
-                if [[ $INSTALL_TESTONLY_PACKAGES = "False" ]]; then
-                    # If not installing test packages the skip this package
-                    inst_pkg=0
-                fi
-            fi
-
             if [[ $inst_pkg = 1 ]]; then
                 echo $package
             fi
@@ -903,8 +932,6 @@ function get_packages {
     local package_dir=$(_get_package_dir)
     local file_to_parse=""
     local service=""
-
-    INSTALL_TESTONLY_PACKAGES=$(trueorfalse False INSTALL_TESTONLY_PACKAGES)
 
     if [[ -z "$package_dir" ]]; then
         echo "No package directory supplied"
@@ -968,7 +995,7 @@ function get_packages {
 #
 # Only packages required for enabled and collected plugins will included.
 #
-# The same metadata used in the main devstack prerequisite files may be used
+# The same metadata used in the main DevStack prerequisite files may be used
 # in these prerequisite files, see get_packages() for more info.
 function get_plugin_packages {
     local xtrace=$(set +o | grep xtrace)
@@ -1468,7 +1495,7 @@ function fetch_plugins {
         return
     fi
 
-    echo "Fetching devstack plugins"
+    echo "Fetching DevStack plugins"
     for plugin in ${plugins//,/ }; do
         git_clone_by_name $plugin
     done
@@ -1492,6 +1519,33 @@ function load_plugin_settings {
         # source any known settings
         if [[ -f $dir/devstack/settings ]]; then
             source $dir/devstack/settings
+        fi
+    done
+}
+
+# plugin_override_defaults
+#
+# Run an extremely early setting phase for plugins that allows default
+# overriding of services.
+function plugin_override_defaults {
+    local plugins="${DEVSTACK_PLUGINS}"
+    local plugin
+
+    # short circuit if nothing to do
+    if [[ -z $plugins ]]; then
+        return
+    fi
+
+    echo "Overriding Configuration Defaults"
+    for plugin in ${plugins//,/ }; do
+        local dir=${GITDIR[$plugin]}
+        # source any overrides
+        if [[ -f $dir/devstack/override-defaults ]]; then
+            # be really verbose that an override is happening, as it
+            # may not be obvious if things fail later.
+            echo "$plugin has overriden the following defaults"
+            cat $dir/devstack/override-defaults
+            source $dir/devstack/override-defaults
         fi
     done
 }
@@ -1525,6 +1579,8 @@ function run_phase {
     # the source phase corresponds to settings loading in plugins
     if [[ "$mode" == "source" ]]; then
         load_plugin_settings
+    elif [[ "$mode" == "override_defaults" ]]; then
+        plugin_override_defaults
     else
         run_plugins $mode $phase
     fi

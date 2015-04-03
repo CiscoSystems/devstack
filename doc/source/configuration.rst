@@ -95,6 +95,8 @@ Also note that the ``localrc`` section is sourced as a shell script
 fragment and MUST conform to the shell requirements, specifically no
 whitespace around ``=`` (equals).
 
+.. _minimal-configuration:
+
 Minimal Configuration
 =====================
 
@@ -169,6 +171,30 @@ Libraries from Git
    ::
 
       LIBS_FROM_GIT=python-keystoneclient,oslo.config
+
+Virtual Environments
+--------------------
+
+  | *Default: ``USE_VENV=False``*
+  |   Enable the use of Python virtual environments by setting ``USE_VENV``
+      to ``True``.  This will enable the creation of venvs for each project
+      that is defined in the ``PROJECT_VENV`` array.
+
+  | *Default: ``PROJECT_VENV['<project>']='<project-dir>.venv'*
+  |   Each entry in the ``PROJECT_VENV`` array contains the directory name
+      of a venv to be used for the project.  The array index is the project
+      name.  Multiple projects can use the same venv if desired.
+
+  ::
+
+    PROJECT_VENV["glance"]=${GLANCE_DIR}.venv
+
+  | *Default: ``ADDITIONAL_VENV_PACKAGES=""``*
+  |   A comma-separated list of additional packages to be installed into each
+      venv.  Often projects will not have certain packages listed in its
+      ``requirements.txt`` file because they are 'optional' requirements,
+      i.e. only needed for certain configurations.  By default, the enabled
+      databases will have their Python bindings added when they are enabled.
 
 Enable Logging
 --------------
@@ -246,6 +272,21 @@ A clean install every time
     ::
 
         RECLONE=yes
+
+Upgrade packages installed by pip
+---------------------------------
+
+    | *Default: ``PIP_UPGRADE=""``*
+    |  By default ``stack.sh`` only installs Python packages if no version
+       is currently installed or the current version does not match a specified
+       requirement. If ``PIP_UPGRADE`` is set to ``True`` then existing required
+       Python packages will be upgraded to the most recent version that
+       matches requirements.
+    |
+
+    ::
+
+        PIP_UPGRADE=True
 
 Swift
 -----
@@ -377,18 +418,6 @@ IP Version
     | *Note: ``FIXED_RANGE_V6`` and ``IPV6_PRIVATE_NETWORK_GATEWAY``
       can be configured with any valid IPv6 prefix. The default values make
       use of an auto-generated ``IPV6_GLOBAL_ID`` to comply with RFC 4193.*
-
-Unit tests dependencies install
--------------------------------
-
-    | *Default: ``INSTALL_TESTONLY_PACKAGES=False``*
-    |  In order to be able to run unit tests with script ``run_test.sh``,
-       the required package dependencies need to be installed.
-       Setting this option as below does the work.
-
-    ::
-
-        INSTALL_TESTONLY_PACKAGES=True
 
 Examples
 ========

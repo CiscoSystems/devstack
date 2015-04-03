@@ -19,7 +19,7 @@ while getopts ":a" opt; do
     esac
 done
 
-# Keep track of the current devstack directory.
+# Keep track of the current DevStack directory.
 TOP_DIR=$(cd $(dirname "$0") && pwd)
 FILES=$TOP_DIR/files
 
@@ -45,6 +45,10 @@ fi
 # Configure Projects
 # ==================
 
+# Plugin Phase 0: override_defaults - allow pluggins to override
+# defaults before other services are run
+run_phase override_defaults
+
 # Import apache functions
 source $TOP_DIR/lib/apache
 
@@ -63,7 +67,7 @@ source $TOP_DIR/lib/cinder
 source $TOP_DIR/lib/swift
 source $TOP_DIR/lib/ceilometer
 source $TOP_DIR/lib/heat
-source $TOP_DIR/lib/neutron
+source $TOP_DIR/lib/neutron-legacy
 source $TOP_DIR/lib/ldap
 source $TOP_DIR/lib/dstat
 
@@ -173,7 +177,9 @@ if is_service_enabled trove; then
     cleanup_trove
 fi
 
-stop_dstat
+if is_service_enabled dstat; then
+    stop_dstat
+fi
 
 # Clean up the remainder of the screen processes
 SCREEN=$(which screen)
