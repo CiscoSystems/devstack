@@ -120,7 +120,8 @@ GIT_BASE=https://github.com
 
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
-NEUTRON_BRANCH=bobmel/device_manager_plugin
+#NEUTRON_BRANCH=bobmel/device_manager_plugin
+NEUTRON_BRANCH=bobmel/device_manager_plugin_kilo_stable
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
@@ -129,3 +130,9 @@ NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
 # Horizon
 #HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
 #HORIZON_BRANCH=bobmel/device_manager_plugin
+
+# unified auth system (manages accounts/tokens)
+#KEYSTONE_REPO=${KEYSTONE_REPO:-${GIT_BASE}/openstack/keystone.git}
+#KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
+KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-stable/kilo}
+
