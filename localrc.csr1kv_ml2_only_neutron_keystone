@@ -117,6 +117,7 @@ GIT_BASE=https://github.com
 # Global Openstack requirements
 #REQUIREMENTS_REPO=${GIT_BASE}/CiscoSystems/requirements.git
 #REQUIREMENTS_BRANCH=csr1kv_for_routing_juno
+REQUIREMENTS_BRANCH=stable/kilo
 
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
