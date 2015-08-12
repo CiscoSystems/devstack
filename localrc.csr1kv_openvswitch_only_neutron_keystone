@@ -1,0 +1,107 @@
+# -*- mode: shell-script -*-
+
+# Setting OFFLINE to True switches off download of packages.
+OFFLINE=False
+
+# Setting RECLONE=yes will make stach.sh freshen each repo on each run.
+RECLONE=yes
+
+GIT_BASE=${GIT_BASE:-https://github.com}
+NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
+NEUTRON_BRANCH=bobmel/device_manager_plugin
+
+# Destination path for installation of the OpenStack components.
+# There is no need to specify it unless you want the code in
+# some particular location (like in a directory shared by all VMs).
+#DEST=/opt/stack
+
+# Running DevStack with multiple hosts requires a custom localrc file 
+# for each host. The master is the same as a single host in installation
+# with MULTI_HOST=True
+MULTI_HOST=False
+
+disable_service nova
+disable_service g-api
+disable_service g-reg
+disable_service n-api
+disable_service n-crt
+disable_service n-obj
+disable_service n-cpu
+disable_service n-net
+disable_service n-cond
+disable_service n-sch
+disable_service n-novnc
+disable_service n-xvnc
+disable_service n-cauth
+
+disable_service cinder
+disable_service c-sch
+disable_service c-api
+disable_service c-vol
+
+disable_service h-eng
+disable_service h-api
+disable_service h-api-cfn
+disable_service h-api-cw
+
+disable_service horizon
+
+disable_service tempest
+
+enable_service neutron
+enable_service q-svc
+enable_service q-agt
+#enable_service q-dhcp
+enable_service q-l3
+enable_service ciscocfgagent
+enable_service q-ciscorouter
+enable_service q-ciscodevicemanager
+
+#LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
+#Q_PLUGIN=csr1kv_openvswitch
+Q_PLUGIN=ml2
+ENABLE_TENANT_VLANS=True
+OVS_VLAN_RANGES=pvnet1:100:140
+OVS_BRIDGE_MAPPINGS=pvnet1:br-eth3
+#ML2_VLAN_RANGES=100:200
+#Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
+#Q_ML2_TENANT_NETWORK_TYPE=local
+
+# My single node DevStackVM has NATed access to the external world. 
+# Its default GW is 172.16.6.2 (provided by VMware Fusion), the VM host 
+# (my MBP) has IP address 172.16.6.1 (on vmnet8).
+# The network where my DevStack machines reside. ALWAYS VERIFY IT BEFORE RUNNING stack.sh!
+MY_NET='172.16.6.0/24'
+
+# ``HOST_IP`` is not set by default.
+# This is the IP address of my DevStackVM.
+HOST_IP=`~/bin/hostitfc -i -c $MY_NET`
+
+# Some network address settings relevant for my configuration. 
+FLAT_INTERFACE=`~/bin/hostitfc -n -c $MY_NET`
+FIXED_RANGE=10.0.3.0/24
+NETWORK_GATEWAY=10.0.3.1
+FIXED_NETWORK_SIZE=256
+FLOATING_RANGE=172.16.6.32/27
+PUBLIC_NETWORK_GATEWAY=172.16.6.33 
+
+# Use br-int as bridge to reach external networks
+PUBLIC_BRIDGE=br-int
+
+# Logging
+# -------
+
+# By default ``stack.sh`` output only goes to the terminal where it runs.  It can
+# be configured to additionally log to a file by setting ``LOGFILE`` to the full
+# path of the destination log file.  A timestamp will be appended to the given name.
+LOGFILE=~/devstack/stack.sh.log
+
+our_pw=simple
+# Must use hard coded value, as scripts grep for the following variables.
+MYSQL_PASSWORD=simple
+MYSQL_USER=stacker
+RABBIT_PASSWORD=$our_pw
+SERVICE_TOKEN=$our_pw
+SERVICE_PASSWORD=$our_pw
+ADMIN_PASSWORD=$our_pw
+

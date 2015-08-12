@@ -1,0 +1,139 @@
+# -*- mode: shell-script -*-
+
+# Setting OFFLINE to True switches off download of packages.
+OFFLINE=False
+
+# Setting RECLONE=yes will make stach.sh freshen each repo on each run.
+RECLONE=yes
+
+# Destination path for installation of the OpenStack components.
+# There is no need to specify it unless you want the code in
+# some particular location (like in a directory shared by all VMs).
+DEST=/opt/stack
+
+# Logging
+LOG_COLOR=True
+LOGDIR=$TOP_DIR/logs
+SCREEN_LOGDIR=$DEST/logs
+LOGFILE=$LOGDIR/stack.sh.log
+
+# Running DevStack with multiple hosts requires a custom localrc file 
+# for each host. The master is the same as a single host in installation
+# with MULTI_HOST=True
+MULTI_HOST=False
+
+disable_service nova
+disable_service g-api
+disable_service g-reg
+disable_service n-api
+disable_service n-crt
+disable_service n-obj
+disable_service n-cpu
+disable_service n-net
+disable_service n-cond
+disable_service n-sch
+disable_service n-novnc
+disable_service n-xvnc
+disable_service n-cauth
+
+disable_service cinder
+disable_service c-sch
+disable_service c-api
+disable_service c-vol
+
+disable_service h-eng
+disable_service h-api
+disable_service h-api-cfn
+disable_service h-api-cw
+
+disable_service horizon
+
+disable_service tempest
+
+# Set this to True if CSR1kv setup scripts for Nova and Glance should be executed
+# If you won't use CSR1kv you can leave it as False.
+Q_CISCO_CONFIGURE_NOVA_AND_GLANCE=False
+
+enable_service neutron
+enable_service q-svc
+enable_service q-agt
+#enable_service q-dhcp
+enable_service q-l3
+enable_service ciscocfgagent
+enable_service q-ciscorouter
+enable_service q-ciscodevicemanager
+
+#LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
+Q_PLUGIN=ml2
+ENABLE_TENANT_VLANS=True
+ML2_VLAN_RANGES=pvnet1:100:140
+OVS_PHYSICAL_BRIDGE=br-eth3
+OVS_BRIDGE_MAPPINGS=pvnet1:$OVS_PHYSICAL_BRIDGE
+#ML2_VLAN_RANGES=100:200
+#Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
+#Q_ML2_TENANT_NETWORK_TYPE=local
+
+# Specify the L3 router plugin that the ML2 script configures to be
+# the Cisco device manager service plugin. This ensure it is loaded
+# before the Cisco routing service plugin
+ML2_L3_PLUGIN=neutron.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin
+
+# My single node DevStackVM has NATed access to the external world. 
+# Its default GW is 172.16.6.2 (provided by VMware Fusion), the VM host 
+# (my MBP) has IP address 172.16.6.1 (on vmnet8).
+# The network where my DevStack machines reside. ALWAYS VERIFY IT BEFORE RUNNING stack.sh!
+MY_NET='172.16.6.0/24'
+
+# ``HOST_IP`` is not set by default.
+# This is the IP address of my DevStackVM.
+HOST_IP=`~/bin/hostitfc -i -c $MY_NET`
+
+# Some network address settings relevant for my configuration. 
+FLAT_INTERFACE=`~/bin/hostitfc -n -c $MY_NET`
+FIXED_RANGE=10.0.3.0/24
+NETWORK_GATEWAY=10.0.3.1
+FIXED_NETWORK_SIZE=256
+FLOATING_RANGE=172.16.6.32/27
+PUBLIC_NETWORK_GATEWAY=172.16.6.33 
+
+# Use br-int as bridge to reach external networks
+PUBLIC_BRIDGE=br-int
+
+our_pw=simple
+# Must use hard coded value, as scripts grep for the following variables.
+DATABASE_PASSWORD=$our_pw
+MYSQL_PASSWORD=$DATABASE_PASSWORD
+MYSQL_USER=stacker
+RABBIT_PASSWORD=$our_pw
+SERVICE_TOKEN=$our_pw
+SERVICE_PASSWORD=$our_pw
+ADMIN_PASSWORD=$our_pw
+
+# Include all services that should be installed using git rather that pip in this variable
+LIBS_FROM_GIT=neutron,python-neutronclient
+
+GIT_BASE=https://github.com
+
+# Global Openstack requirements
+#REQUIREMENTS_REPO=${GIT_BASE}/CiscoSystems/requirements.git
+#REQUIREMENTS_BRANCH=csr1kv_for_routing_juno
+REQUIREMENTS_BRANCH=stable/kilo
+
+# Neutron service
+NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
+#NEUTRON_BRANCH=bobmel/device_manager_plugin
+NEUTRON_BRANCH=bobmel/device_manager_plugin_kilo_stable
+
+# Neutron client
+NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
+NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
+
+# Horizon
+#HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
+#HORIZON_BRANCH=bobmel/device_manager_plugin
+
+# unified auth system (manages accounts/tokens)
+#KEYSTONE_REPO=${KEYSTONE_REPO:-${GIT_BASE}/openstack/keystone.git}
+#KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
+KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-stable/kilo}
+

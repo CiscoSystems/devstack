@@ -1,0 +1,118 @@
+# Cisco device manager plugin
+# ---------------------------
+
+# Save trace setting
+MY_XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+Q_CISCO_DEVICE_MANAGER_PLUGIN=neutron.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin
+
+function neutron_cisco_device_manager_configure_common() {
+    # bobmel: Temporarily disable the adding to service list and instead do it in cisco_router_plugin
+    # bobmel: since device manager must be loaded first
+#    _neutron_service_plugin_class_add $Q_CISCO_DEVICE_MANAGER_PLUGIN
+  
+    CISCO_DEVICE_MANAGER_PLUGIN_CONFIG_DIR=$NEUTRON_CONF_DIR/plugins/cisco
+    mkdir -p $CISCO_DEVICE_MANAGER_PLUGIN_CONFIG_DIR
+    Q_CISCO_DEVICE_MANAGER_PLUGIN_CONF_FILE=$CISCO_DEVICE_MANAGER_PLUGIN_CONFIG_DIR/cisco_device_manager_plugin.ini
+    cp $NEUTRON_DIR/etc/neutron/plugins/cisco/cisco_device_manager_plugin.ini $Q_CISCO_DEVICE_MANAGER_PLUGIN_CONF_FILE
+    Q_PLUGIN_EXTRA_CONF_FILES=(${Q_PLUGIN_EXTRA_CONF_FILES[@]} $Q_CISCO_DEVICE_MANAGER_PLUGIN_CONF_FILE)
+
+    # inject any deployer provided configurations
+    CISCO_INJECT_FILE=$TOP_DIR/cisco_device_manager_plugin.inject
+    if [[ -f $CISCO_INJECT_FILE ]]; then
+        cat $CISCO_INJECT_FILE >> $Q_CISCO_DEVICE_MANAGER_PLUGIN_CONF_FILE
+    fi 
+    _install_cisco_device_manager_plugin_dependencies
+ }
+
+#function neutron_cisco_device_manager_configure_driver() {
+#    :
+#}
+
+function neutron_cisco_device_manager_stop() {
+    :
+}
+
+###### Install dependencies packages
+
+# Specify ncclient package information
+#NCCLIENT_DIR=$DEST/ncclient
+NCCLIENT_VERSION=${NCCLIENT_VERSION:-0.3.1}
+#NCCLIENT_REPO=${NCCLIENT_REPO:-${GIT_BASE}/CiscoSystems/ncclient.git}
+#NCCLIENT_BRANCH=${NCCLIENT_BRANCH:-master}
+
+function install_ciscoconfparse() {
+    sudo pip install ciscoconfparse
+}
+
+
+function is_ciscoconfparse_installed() {
+    if [[ $(pip list | grep ciscoconfparse | awk '{ print $1 }')  == "ciscoconfparse" ]]; then
+        return 0
+    fi
+    return 1
+}
+
+
+# Check the version of the installed ncclient package
+function check_ncclient_version() {
+python << EOF
+version = '$NCCLIENT_VERSION'
+import sys
+try:
+    import pkg_resources
+    import ncclient
+    module_version = pkg_resources.get_distribution('ncclient').version
+    if version != module_version:
+        sys.exit(1)
+except:
+    sys.exit(1)
+EOF
+}
+
+
+# Install the ncclient package
+function install_ncclient() {
+    sudo pip install ncclient
+#    git_clone $NCCLIENT_REPO $NCCLIENT_DIR $NCCLIENT_BRANCH
+#    (cd $NCCLIENT_DIR; sudo python setup.py install)
+}
+
+
+# Check if the required version of ncclient has been installed
+function is_ncclient_installed() {
+#    # Check if the Cisco ncclient repository exists
+#    if [[ -d $NCCLIENT_DIR ]]; then
+#        remotes=$(cd $NCCLIENT_DIR; git remote -v | grep fetch | awk '{ print $2}')
+#        for remote in $remotes; do
+#            if [[ $remote == $NCCLIENT_REPO ]]; then
+#                break;
+#            fi
+#        done
+#        if [[ $remote != $NCCLIENT_REPO ]]; then
+#            return 1
+#        fi
+#    else
+#        return 1
+#    fi
+
+    # Check if the ncclient is installed with the right version
+    if ! check_ncclient_version; then
+        return 1
+    fi
+    return 0
+}
+
+
+function _install_cisco_device_manager_plugin_dependencies() {
+    if ! is_ncclient_installed; then
+        install_ncclient
+    fi
+    if ! is_ciscoconfparse_installed; then
+        install_ciscoconfparse
+    fi
+}
+
+# Restore xtrace
+$MY_XTRACE

@@ -202,6 +202,9 @@ export_proxy_variables
 disable_negated_services
 
 
+# Set up logging level
+VERBOSE=$(trueorfalse True $VERBOSE)
+
 # Configure sudo
 # --------------
 
@@ -1235,6 +1238,7 @@ fi
 
 if is_service_enabled neutron; then
     start_neutron_agents
+    setup_for_csr1kv
 fi
 # Once neutron agents are started setup initial network elements
 if is_service_enabled q-svc && [[ "$NEUTRON_CREATE_INITIAL_NETWORKS" == "True" ]]; then
