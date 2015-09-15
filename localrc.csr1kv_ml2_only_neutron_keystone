@@ -99,6 +99,9 @@ PUBLIC_NETWORK_GATEWAY=172.16.6.33
 # Use br-int as bridge to reach external networks
 PUBLIC_BRIDGE=br-int
 
+# Default routertype for Neutron routers
+Q_CISCO_DEFAULT_ROUTER_TYPE=ASR1k_router
+
 our_pw=simple
 # Must use hard coded value, as scripts grep for the following variables.
 DATABASE_PASSWORD=$our_pw
@@ -122,7 +125,8 @@ REQUIREMENTS_BRANCH=stable/kilo
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
 #NEUTRON_BRANCH=bobmel/device_manager_plugin
-NEUTRON_BRANCH=bobmel/device_manager_plugin_kilo_stable
+#NEUTRON_BRANCH=bobmel/device_manager_plugin_kilo_stable
+NEUTRON_BRANCH=asr1k_kilo_stable_wip
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
