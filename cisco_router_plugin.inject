@@ -22,7 +22,7 @@ cfg_agent_service_helper=neutron.plugins.cisco.cfg_agent.service_helpers.routing
 cfg_agent_driver=neutron.plugins.cisco.cfg_agent.device_drivers.csr1kv.csr1kv_routing_driver.CSR1kvRoutingDriver
 
 [cisco_router_type:3]
-name=ASR1kv_router
+name=ASR1k_router
 description="Neutron router implemented in Cisco ASR1k device"
 template_id=3
 shared=True

@@ -90,6 +90,9 @@ PUBLIC_NETWORK_GATEWAY=172.16.6.33
 # Use br-int as bridge to reach external networks
 PUBLIC_BRIDGE=br-int
 
+# Default routertype for Neutron routers
+#Q_CISCO_DEFAULT_ROUTER_TYPE=CSR1kv_router
+
 # Logging
 # -------
 
