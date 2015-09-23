@@ -760,7 +760,8 @@ install_novaclient
 if is_service_enabled swift glance horizon; then
     install_swiftclient
 fi
-if is_service_enabled neutron nova horizon; then
+#if is_service_enabled neutron nova horizon; then
+if is_service_enabled neutron; then
     install_neutronclient
 fi
 if is_service_enabled heat horizon; then
@@ -1240,6 +1241,7 @@ fi
 
 if is_service_enabled neutron; then
     start_neutron_agents
+    setup_for_csr1kv
 fi
 # Once neutron agents are started setup initial network elements
 if is_service_enabled q-svc && [[ "$NEUTRON_CREATE_INITIAL_NETWORKS" == "True" ]]; then

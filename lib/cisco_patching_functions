@@ -1,0 +1,38 @@
+function get_latest_patch_set_index {
+    local patch_repo="$1"
+    local branch_name_prefix="$2"
+    local separator="$3"
+ 
+    local i=$(git ls-remote "$patch_repo" | grep "$branch_name_prefix" | awk -v sep=$separator 'BEGIN {i=0} { n=split($2,f, sep); if (f[n] > i) i = f[n];} END { print i}')
+    echo $i
+}
+
+function git_cherry_pick {
+    local patch_repo="$1"
+    local branch="$2"
+
+#   local result=$(git fetch $patch_repo $branch > /dev/null 2>&1 && git cherry-pick FETCH_HEAD > /dev/null 2>&1)
+    git fetch $patch_repo $branch > /dev/null 2>&1 && git cherry-pick FETCH_HEAD > /dev/null 2>&1
+#    git fetch $patch_repo $branch && git cherry-pick FETCH_HEAD
+    echo $?
+}
+
+function patch_neutron_with_patch_under_review {
+    local patch_repo="$1"
+    local branch_name_prefix="$2" 
+    local separator="$3"
+    local neutron_dir="$4"
+
+ #   echo -n "Determining latest patch set ... "
+    local latest=$(get_latest_patch_set_index "$patch_repo" "$branch_name_prefix" "$separator")
+  #  echo $latest
+    local branch_name="$branch_name_prefix$separator$latest"
+    cd "$neutron_dir"
+ #   echo -n "Applying patch $branch_name by cherry-picking ... "
+    result=$(git_cherry_pick "$patch_repo" "$branch_name")
+    if [[ "$result" -gt 0 ]]; then
+        echo "Failed!"
+    else 
+        echo "Done!"
+    fi
+}

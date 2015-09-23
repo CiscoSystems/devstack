@@ -112,6 +112,12 @@ NEUTRON_CONF_DIR=/etc/neutron
 NEUTRON_CONF=$NEUTRON_CONF_DIR/neutron.conf
 export NEUTRON_TEST_CONFIG_FILE=${NEUTRON_TEST_CONFIG_FILE:-"$NEUTRON_CONF_DIR/debug.ini"}
 
+# BOB: Added for devstack runs as part of CI for code not yet upstream
+Q_CISCO_CSR1KV_SETUP_SCRIPT_DIR=${Q_CISCO_CSR1KV_SETUP_SCRIPT_DIR:-$TOP_DIR/lib/neutron_plugins/services/csr1kv_l3_setup/}
+Q_CISCO_PATCH_NEUTRON=$(trueorfalse False $Q_CISCO_PATCH_NEUTRON)
+source $TOP_DIR/lib/cisco_patching_functions
+# BOB: Added for devstack runs as part of CI for code not yet upstream
+
 # Agent binaries.  Note, binary paths for other agents are set in per-service
 # scripts in lib/neutron_plugins/services/
 AGENT_DHCP_BINARY="$NEUTRON_BIN_DIR/neutron-dhcp-agent"
@@ -209,6 +215,10 @@ Q_PUBLIC_VETH_INT=${Q_PUBLIC_VETH_INT:-veth-pub-int}
 Q_L3_ENABLED=${Q_L3_ENABLED:-False}
 # L3 routers exist per tenant
 Q_L3_ROUTER_PER_TENANT=${Q_L3_ROUTER_PER_TENANT:-False}
+
+# MySQL info
+MYSQL_USER=${MYSQL_USER:root}
+MYSQL_PASSWORD=${MYSQL_PASSWORD:password}
 
 # List of config file names in addition to the main plugin config file
 # See _configure_neutron_common() for details about setting it up
@@ -351,6 +361,14 @@ source $TOP_DIR/lib/neutron_plugins/services/vpn
 # ---------------------------------
 source $TOP_DIR/lib/neutron_plugins/services/firewall
 
+# Cisco Routing Service Plugin functions
+# ---------------------------------
+source $TOP_DIR/lib/neutron_plugins/services/cisco_router
+
+# Cisco Device Manager Service Plugin functions
+# ---------------------------------
+source $TOP_DIR/lib/neutron_plugins/services/cisco_device_manager
+
 # Use security group or not
 if has_neutron_plugin_security_group; then
     Q_USE_SECGROUP=${Q_USE_SECGROUP:-True}
@@ -425,6 +443,12 @@ function configure_neutron {
     iniset_rpc_backend neutron $NEUTRON_CONF
 
     # goes before q-svc to init Q_SERVICE_PLUGIN_CLASSES
+    if is_service_enabled q-ciscorouter; then
+        _configure_neutron_cisco_router
+    fi
+    if is_service_enabled q-ciscodevicemanager; then
+         _configure_neutron_cisco_device_manager
+    fi
     if is_service_enabled q-lbaas; then
         _configure_neutron_lbaas
     fi
@@ -532,6 +556,16 @@ function create_neutron_accounts {
                 "$Q_PROTOCOL://$SERVICE_HOST:$Q_PORT/"
         fi
     fi
+}
+
+function setup_for_csr1kv {
+    if [[ "$Q_PLUGIN" == "ml2" ]]; then
+	    plugin=ml2
+    else
+	    die $LINENO "Not a deployment with CSR1kv. Exiting!"
+    fi
+    echo "Running CSR1Kv setup phase 2 with ${MYSQL_USER} ${MYSQL_PASSWORD}"
+    (cd $Q_CISCO_CSR1KV_SETUP_SCRIPT_DIR; ./csr1kv_install_phase2.sh neutron $plugin $TOP_DIR/localrc $MYSQL_USER $MYSQL_PASSWORD $Q_CISCO_MGMT_CFG_AGENT_IP)
 }
 
 function create_neutron_initial_network {
@@ -741,6 +775,9 @@ function start_neutron_other_agents {
         # For XenServer, start an agent for the domU openvswitch
         run_process q-domua "python $AGENT_BINARY --config-file $NEUTRON_CONF --config-file /$Q_PLUGIN_CONF_FILE.domU"
     fi
+    if is_service_enabled ciscocfgagent; then
+        start_the_ciscocfgagent
+    fi
 }
 
 # Start running processes, including screen
@@ -780,6 +817,12 @@ function stop_neutron_other {
     fi
     if is_service_enabled q-metering; then
         neutron_metering_stop
+    fi
+    if is_service_enabled q-ciscorouter; then
+         neutron_cisco_router_stop
+    fi
+    if is_service_enabled q-ciscodevicemanager; then
+         neutron_cisco_device_manager_stop
     fi
 }
 
@@ -1088,6 +1131,14 @@ function _configure_neutron_vpn {
     fi
     neutron_vpn_install_agent_packages
     neutron_vpn_configure_common
+}
+
+function _configure_neutron_cisco_router {
+    neutron_cisco_router_configure_common
+}
+
+function _configure_neutron_cisco_device_manager {
+    neutron_cisco_device_manager_configure_common
 }
 
 function _configure_dvr {

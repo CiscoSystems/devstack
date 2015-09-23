@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# ciscocfgagent
+# -------------
+
+# This file implements functions required to configure ciscocfgagent as the third-party
+# system used with devstack's Neutron.  To include this file, specify the following
+# variables in localrc:
+#
+# * enable_service ciscocfgagent
+#
+
+
+# Save trace setting
+CISCO_XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+function configure_ciscocfgagent {
+    Q_CISCO_CFGAGENT_ENABLED=True
+    AGENT_CISCO_CFGAGENT_BINARY=${AGENT_CISCO_CFGAGENT_BINARY:-"$NEUTRON_BIN_DIR/neutron-cisco-cfg-agent"}
+    CISCO_CFGAGENT_CONFIG_DIR=$NEUTRON_CONF_DIR/plugins/cisco
+    mkdir -p $CISCO_CFGAGENT_CONFIG_DIR
+    Q_CISCO_CFGAGENT_CONF_FILE=$CISCO_CFGAGENT_CONFIG_DIR/cisco_cfg_agent.ini
+
+    cp $NEUTRON_DIR/etc/neutron/plugins/cisco/cisco_cfg_agent.ini $Q_CISCO_CFGAGENT_CONF_FILE
+
+    iniset $Q_CISCO_CFGAGENT_CONF_FILE DEFAULT verbose True
+    iniset $Q_CISCO_CFGAGENT_CONF_FILE DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
+}
+
+function init_ciscocfgagent {
+    if [[ "$Q_PLUGIN" == "csr1kv_openvswitch" ]]; then
+	    plugin=ovs
+    elif [[ "$Q_PLUGIN" == "ml2" ]]; then
+	    plugin=ml2
+    elif [[ "$Q_PLUGIN" == "cisco" || "${Q_CISCO_PLUGIN_SUBPLUGINS[0]}" == "n1kv" ]]; then
+	    plugin=n1kv
+    else
+	    die $LINENO "Not a deployment with CSR1kv. Exiting!"
+    fi
+    echo "Running CSR1Kv setup phase 1 with ${MYSQL_USER} ${MYSQL_PASSWORD}"
+    (cd $Q_CISCO_CSR1KV_SETUP_SCRIPT_DIR; ./csr1kv_install_phase1.sh neutron $plugin $TOP_DIR/localrc $MYSQL_USER $MYSQL_PASSWORD $Q_CISCO_MGMT_CFG_AGENT_IP)
+}
+
+function install_ciscocfgagent {
+    :
+}
+
+function start_ciscocfgagent {
+    # We do not start the cfg agent using the 3rd party system mechanism
+    # since it starts the 3rd party systems before neutron server.
+    :
+}
+
+function start_the_ciscocfgagent {
+    # We start the cfg agent when the other agents are started
+    # Need to enable q-ciscocfgagent due to how is_service_enabled function works
+    enable_service q-ciscocfgagent
+    CISCO_CFG_CONF_FILES="--config-file $NEUTRON_CONF --config-file=$Q_CISCO_CFGAGENT_CONF_FILE"
+    run_process q-ciscocfgagent "cd $NEUTRON_DIR && python $AGENT_CISCO_CFGAGENT_BINARY $CISCO_CFG_CONF_FILES"
+}
+
+function stop_ciscocfgagent {
+    :
+}
+
+function check_ciscocfgagent {
+    :
+}
+
+# Restore xtrace
+$CISCO_XTRACE
