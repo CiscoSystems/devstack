@@ -120,13 +120,13 @@ GIT_BASE=https://github.com
 # Global Openstack requirements
 #REQUIREMENTS_REPO=${GIT_BASE}/CiscoSystems/requirements.git
 #REQUIREMENTS_BRANCH=csr1kv_for_routing_juno
-REQUIREMENTS_BRANCH=stable/kilo
+REQUIREMENTS_BRANCH=master
 
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
 #NEUTRON_BRANCH=bobmel/device_manager_plugin
 #NEUTRON_BRANCH=bobmel/device_manager_plugin_kilo_stable
-NEUTRON_BRANCH=asr1k_kilo_stable_wip
+NEUTRON_BRANCH=asr1k_liberty_master_wip
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
@@ -138,6 +138,5 @@ NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
 
 # unified auth system (manages accounts/tokens)
 #KEYSTONE_REPO=${KEYSTONE_REPO:-${GIT_BASE}/openstack/keystone.git}
-#KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
-KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-stable/kilo}
+KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
 
