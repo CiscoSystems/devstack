@@ -750,7 +750,8 @@ install_novaclient
 if is_service_enabled swift glance horizon; then
     install_swiftclient
 fi
-if is_service_enabled neutron nova horizon; then
+#if is_service_enabled neutron nova horizon; then
+if is_service_enabled neutron; then
     install_neutronclient
 fi
 if is_service_enabled heat horizon; then
