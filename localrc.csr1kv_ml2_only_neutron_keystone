@@ -132,7 +132,7 @@ NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
 NEUTRON_BRANCH=asr1k_liberty_master_wip
 
 # Neutron client
-#NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
+NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
 NEUTRONCLIENT_BRANCH=cisco_extensions
 
 # Horizon
