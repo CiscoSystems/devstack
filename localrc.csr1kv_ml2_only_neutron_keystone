@@ -129,8 +129,8 @@ NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
 NEUTRON_BRANCH=asr1k_liberty_master_wip
 
 # Neutron client
-NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
+#NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
+#NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
 
 # Horizon
 #HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
@@ -138,5 +138,5 @@ NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
 
 # unified auth system (manages accounts/tokens)
 #KEYSTONE_REPO=${KEYSTONE_REPO:-${GIT_BASE}/openstack/keystone.git}
-KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
+#KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
 
