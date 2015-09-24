@@ -10,6 +10,9 @@ RECLONE=yes
 DEBUG=True
 VERBOSE=True
 
+# We only support IPv4 now
+IP_VERSION=4
+
 # ``HOST_IP`` should be set manually for best results if the NIC configuration
 # of the host is unusual, i.e. ``eth1`` has the default route but ``eth0`` is the
 # public interface.  It is auto-detected in ``stack.sh`` but often is indeterminate
@@ -122,7 +125,7 @@ NEUTRON_BRANCH=asr1k_liberty_master_wip
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
+NEUTRONCLIENT_BRANCH=cisco_extensions
 
 # Horizon
 #HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git

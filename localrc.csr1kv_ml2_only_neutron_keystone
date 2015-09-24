@@ -63,6 +63,9 @@ enable_service ciscocfgagent
 enable_service q-ciscorouter
 enable_service q-ciscodevicemanager
 
+# We only support IPv4 now
+IP_VERSION=4
+
 #LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
 Q_PLUGIN=ml2
 ENABLE_TENANT_VLANS=True
@@ -130,7 +133,7 @@ NEUTRON_BRANCH=asr1k_liberty_master_wip
 
 # Neutron client
 #NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-#NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
+NEUTRONCLIENT_BRANCH=cisco_extensions
 
 # Horizon
 #HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
