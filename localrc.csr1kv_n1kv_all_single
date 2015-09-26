@@ -32,6 +32,9 @@ PUBLIC_NETWORK_GATEWAY=<SET THIS VARIABLE!!!>
 LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
 NOVA_USE_QUANTUM_API=v2
 
+# We only support IPv4 now  
+IP_VERSION=4
+
 # Use br-int as bridge to reach external networks
 PUBLIC_BRIDGE=br-int
 
@@ -118,11 +121,11 @@ GIT_BASE=https://github.com
 
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
-NEUTRON_BRANCH=bobmel/device_manager_plugin
+NEUTRON_BRANCH=asr1k_kilo_stable_wip
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
+NEUTRONCLIENT_BRANCH=cisco-kilo
 
 # Horizon
 HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
