@@ -10,10 +10,12 @@ RECLONE=yes
 # There is no need to specify it unless you want the code in
 # some particular location (like in a directory shared by all VMs).
 DEST=/opt/stack
+
+# Logging
+LOG_COLOR=True
 LOGDIR=$TOP_DIR/logs
 SCREEN_LOGDIR=$DEST/logs
-LOGFILE=~/devstack/stack.sh.log
-
+LOGFILE=$LOGDIR/stack.sh.log
 
 # Running DevStack with multiple hosts requires a custom localrc file 
 # for each host. The master is the same as a single host in installation
@@ -48,8 +50,6 @@ disable_service horizon
 
 disable_service tempest
 
-Q_CISCO_CONFIGURE_NOVA_AND_GLANCE=False
-
 enable_service neutron
 enable_service q-svc
 enable_service q-agt
@@ -59,12 +59,15 @@ enable_service ciscocfgagent
 enable_service q-ciscorouter
 enable_service q-ciscodevicemanager
 
+# We only support IPv4 now
+IP_VERSION=4
+
 #LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
-#Q_PLUGIN=csr1kv_openvswitch
 Q_PLUGIN=ml2
 ENABLE_TENANT_VLANS=True
-OVS_VLAN_RANGES=pvnet1:100:140
-OVS_BRIDGE_MAPPINGS=pvnet1:br-eth3
+ML2_VLAN_RANGES=pvnet1:100:140
+OVS_PHYSICAL_BRIDGE=br-eth3
+OVS_BRIDGE_MAPPINGS=pvnet1:$OVS_PHYSICAL_BRIDGE
 #ML2_VLAN_RANGES=100:200
 #Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
 #Q_ML2_TENANT_NETWORK_TYPE=local
@@ -90,29 +93,24 @@ PUBLIC_NETWORK_GATEWAY=172.16.6.33
 # Use br-int as bridge to reach external networks
 PUBLIC_BRIDGE=br-int
 
-# Default routertype for Neutron routers
-#Q_CISCO_DEFAULT_ROUTER_TYPE=CSR1kv_router
-
-# Logging
-# -------
-
-# By default ``stack.sh`` output only goes to the terminal where it runs.  It can
-# be configured to additionally log to a file by setting ``LOGFILE`` to the full
-# path of the destination log file.  A timestamp will be appended to the given name.
-LOGFILE=~/devstack/stack.sh.log
-
 our_pw=simple
 # Must use hard coded value, as scripts grep for the following variables.
-MYSQL_PASSWORD=simple
+DATABASE_PASSWORD=$our_pw
+MYSQL_PASSWORD=$DATABASE_PASSWORD
 MYSQL_USER=stacker
 RABBIT_PASSWORD=$our_pw
 SERVICE_TOKEN=$our_pw
 SERVICE_PASSWORD=$our_pw
 ADMIN_PASSWORD=$our_pw
 
+# Include all services that should be installed using git rather that pip in this variable
+LIBS_FROM_GIT=neutron,python-neutronclient
+
+GIT_BASE=https://github.com
+
 # Global Openstack requirements
 #REQUIREMENTS_REPO=${GIT_BASE}/CiscoSystems/requirements.git
-#REQUIREMENTS_BRANCH=csr1kv_for_routing_juno
+#REQUIREMENTS_BRANCH=master
 
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
@@ -120,8 +118,13 @@ NEUTRON_BRANCH=asr1k_liberty_master_wip
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-NEUTRONCLIENT_BRANCH=bobmel/device_manager_plugin
+NEUTRONCLIENT_BRANCH=cisco_extensions
 
 # Horizon
 #HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
 #HORIZON_BRANCH=
+
+# unified auth system (manages accounts/tokens)
+#KEYSTONE_REPO=${KEYSTONE_REPO:-${GIT_BASE}/openstack/keystone.git}
+#KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
+
