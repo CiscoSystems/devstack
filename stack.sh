@@ -708,6 +708,9 @@ source $TOP_DIR/tools/fixup_stuff.sh
 # Virtual Environment
 # -------------------
 
+# Install required infra support libraries
+install_infra
+
 # Pre-build some problematic wheels
 if [[ -n ${WHEELHOUSE:-} && ! -d ${WHEELHOUSE:-} ]]; then
     source $TOP_DIR/tools/build_wheels.sh
@@ -716,10 +719,6 @@ fi
 
 # Extras Pre-install
 # ------------------
-
-# Install required infra support libraries
-install_infra
-
 # Phase: pre-install
 run_phase stack pre-install
 
