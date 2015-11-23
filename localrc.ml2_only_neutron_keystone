@@ -50,6 +50,13 @@ disable_service horizon
 
 disable_service tempest
 
+# Set this to True if CSR1kv setup scripts for Nova and Glance should be executed
+# If you won't use CSR1kv you can leave it as False.
+Q_CISCO_CONFIGURE_NOVA_AND_GLANCE=False
+
+# Set this to True if this is a host used to run additional Cisco config agent.
+Q_CISCO_IS_EXTRA_CONFIG_AGENT=False
+
 enable_service neutron
 enable_service q-svc
 enable_service q-agt
@@ -72,6 +79,11 @@ OVS_BRIDGE_MAPPINGS=pvnet1:$OVS_PHYSICAL_BRIDGE
 #Q_ML2_PLUGIN_MECHANISM_DRIVERS=openvswitch
 #Q_ML2_TENANT_NETWORK_TYPE=local
 
+# Specify the L3 router plugin that the ML2 script configures to be
+# the Cisco device manager service plugin. This ensure it is loaded
+# before the Cisco routing service plugin
+ML2_L3_PLUGIN=neutron.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin
+
 # My single node DevStackVM has NATed access to the external world. 
 # Its default GW is 172.16.6.2 (provided by VMware Fusion), the VM host 
 # (my MBP) has IP address 172.16.6.1 (on vmnet8).
@@ -92,6 +104,9 @@ PUBLIC_NETWORK_GATEWAY=172.16.6.33
 
 # Use br-int as bridge to reach external networks
 PUBLIC_BRIDGE=br-int
+
+# Default routertype for Neutron routers
+Q_CISCO_DEFAULT_ROUTER_TYPE=ASR1k_router
 
 our_pw=simple
 # Must use hard coded value, as scripts grep for the following variables.
@@ -114,11 +129,11 @@ GIT_BASE=https://github.com
 
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
-#NEUTRON_BRANCH=asr1k_kilo_wip
+NEUTRON_BRANCH=asr1k_kilo_stable_wip
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-#NEUTRONCLIENT_BRANCH=cisco-kilo
+NEUTRONCLIENT_BRANCH=asr1k_stable_kilo
 
 # Horizon
 #HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
