@@ -59,7 +59,8 @@ device_driver=neutron.plugins.cisco.device_manager.hosting_device_drivers.noop_h
 plugging_driver=neutron.plugins.cisco.device_manager.plugging_drivers.hw_vlan_trunking_driver.HwVLANTrunkingPlugDriver
 
 [hosting_devices]
-[cisco_hosting_device:3]
+[cisco_hosting_device:1]
+name="ASR1k device 1"
 template_id=3
 credentials_id=1
 device_id=SN:abcd1234efgh
@@ -69,7 +70,8 @@ protocol_port=22
 tenant_bound=
 auto_delete=False
 
-[cisco_hosting_device:4]
+[cisco_hosting_device:2]
+name="ASR1k device 2"
 template_id=3
 credentials_id=1
 device_id=SN:efgh5678ijkl
@@ -79,15 +81,15 @@ protocol_port=22
 tenant_bound=
 auto_delete=False
 
-[cisco_hosting_device:5]
-template_id=3
-credentials_id=1
-device_id=SN:ijkl9012mnop
-admin_state_up=True
-management_ip_address=10.0.100.7
-protocol_port=22
-tenant_bound=
-auto_delete=False
+#[cisco_hosting_device:3]
+#template_id=3
+#credentials_id=1
+#device_id=SN:ijkl9012mnop
+#admin_state_up=True
+#management_ip_address=10.0.100.7
+#protocol_port=22
+#tenant_bound=
+#auto_delete=False
 
 
 [plugging_drivers]
@@ -99,7 +101,7 @@ external_net_interface_1=*:GigabitEthernet/2/0/1
 internal_net_interface_1=*:GigabitEthernet/1/0/2
 external_net_interface_1=*:GigabitEthernet/2/0/3
 
-[HwVLANTrunkingPlugDriver:5]
-internal_net_interface_1=*:GigabitEthernet/1/0/4
-external_net_interface_1=*:GigabitEthernet/1/0/5
+#[HwVLANTrunkingPlugDriver:5]
+#internal_net_interface_1=*:GigabitEthernet/1/0/4
+#external_net_interface_1=*:GigabitEthernet/1/0/5
 
