@@ -6,6 +6,9 @@ OFFLINE=False
 # Setting RECLONE=yes will make stach.sh freshen each repo on each run.
 RECLONE=yes
 
+DEBUG=True
+VERBOSE=True
+
 # Destination path for installation of the OpenStack components.
 # There is no need to specify it unless you want the code in
 # some particular location (like in a directory shared by all VMs).
@@ -50,23 +53,26 @@ disable_service horizon
 
 disable_service tempest
 
-# Set this to True if CSR1kv setup scripts for Nova and Glance should be executed
-# If you won't use CSR1kv you can leave it as False.
-Q_CISCO_CONFIGURE_NOVA_AND_GLANCE=False
-
 enable_service neutron
 enable_service q-svc
 enable_service q-agt
+# we disable q-dhcp since we won't spin up VMs anyway
 #enable_service q-dhcp
 enable_service q-l3
 enable_service ciscocfgagent
 enable_service q-ciscorouter
 enable_service q-ciscodevicemanager
 
-# We only support IPv4 now
-IP_VERSION=4
+# Set this to True if CSR1kv setup scripts for Nova and Glance should be executed
+# If you won't use CSR1kv you can leave it as False.
+Q_CISCO_CONFIGURE_NOVA_AND_GLANCE=False
 
-#LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
+# Set this to True if this is a host used to run additional Cisco config agent.
+Q_CISCO_IS_EXTRA_CONFIG_AGENT=False
+
+# Set this to True to create some networks/subnets for testing
+Q_CISCO_CREATE_TEST_NETWORKS=False
+
 Q_PLUGIN=ml2
 ENABLE_TENANT_VLANS=True
 ML2_VLAN_RANGES=pvnet1:100:140
@@ -91,13 +97,17 @@ MY_NET='172.16.6.0/24'
 # This is the IP address of my DevStackVM.
 HOST_IP=`~/bin/hostitfc -i -c $MY_NET`
 
+# We only support IPv4 now
+IP_VERSION=4
+
 # Some network address settings relevant for my configuration. 
 FLAT_INTERFACE=`~/bin/hostitfc -n -c $MY_NET`
 FIXED_RANGE=10.0.3.0/24
 NETWORK_GATEWAY=10.0.3.1
 FIXED_NETWORK_SIZE=256
 FLOATING_RANGE=172.16.6.32/27
-PUBLIC_NETWORK_GATEWAY=172.16.6.33 
+PUBLIC_NETWORK_GATEWAY=172.16.6.33
+#LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
 
 # Use br-int as bridge to reach external networks
 PUBLIC_BRIDGE=br-int
@@ -122,25 +132,16 @@ GIT_BASE=https://github.com
 
 # Global Openstack requirements
 #REQUIREMENTS_REPO=${GIT_BASE}/CiscoSystems/requirements.git
-#REQUIREMENTS_BRANCH=csr1kv_for_routing_juno
 REQUIREMENTS_BRANCH=stable/kilo
 
 # Neutron service
 NEUTRON_REPO=${GIT_BASE}/CiscoSystems/neutron.git
-#NEUTRON_BRANCH=bobmel/device_manager_plugin
-#NEUTRON_BRANCH=bobmel/device_manager_plugin_kilo_stable
-NEUTRON_BRANCH=asr1k_kilo_stable_wip
+NEUTRON_BRANCH=asr1k-stable-kilo
 
 # Neutron client
 NEUTRONCLIENT_REPO=${GIT_BASE}/CiscoSystems/python-neutronclient.git
-NEUTRONCLIENT_BRANCH=cisco-kilo
-
-# Horizon
-#HORIZON_REPO=${GIT_BASE}/CiscoSystems/horizon.git
-#HORIZON_BRANCH=bobmel/device_manager_plugin
+NEUTRONCLIENT_BRANCH=asr1k-stable-kilo
 
 # unified auth system (manages accounts/tokens)
 #KEYSTONE_REPO=${KEYSTONE_REPO:-${GIT_BASE}/openstack/keystone.git}
-#KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-master}
 KEYSTONE_BRANCH=${KEYSTONE_BRANCH:-stable/kilo}
-
