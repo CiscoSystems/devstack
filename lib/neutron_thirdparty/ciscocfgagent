@@ -38,6 +38,7 @@ function init_ciscocfgagent {
     else
 	    die $LINENO "Not a deployment with CSR1kv. Exiting!"
     fi
+    Q_CISCO_IS_EXTRA_CONFIG_AGENT=${Q_CISCO_IS_EXTRA_CONFIG_AGENT:-False}
     if [[ "$Q_CISCO_IS_EXTRA_CONFIG_AGENT" == "False" ]]; then
         echo "Running CSR1Kv setup phase 1 with ${MYSQL_USER} ${MYSQL_PASSWORD}"
         (cd $Q_CISCO_CSR1KV_SETUP_SCRIPT_DIR; ./csr1kv_install_phase1.sh neutron $plugin $TOP_DIR/localrc $MYSQL_USER $MYSQL_PASSWORD $Q_CISCO_MGMT_CFG_AGENT_IP)
