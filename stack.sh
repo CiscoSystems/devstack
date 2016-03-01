@@ -46,6 +46,8 @@ if [[ -n "$NOUNSET" ]]; then
     set -o nounset
 fi
 
+# Set start of devstack timestamp
+DEVSTACK_START_TIME=$(date +%s)
 
 # Configuration
 # =============
@@ -461,11 +463,14 @@ function exit_trap {
 
     if [[ $r -ne 0 ]]; then
         echo "Error on exit"
+        generate-subunit $DEVSTACK_START_TIME $SECONDS 'fail' >> ${SUBUNIT_OUTPUT}
         if [[ -z $LOGDIR ]]; then
             $TOP_DIR/tools/worlddump.py
         else
             $TOP_DIR/tools/worlddump.py -d $LOGDIR
         fi
+    else
+        generate-subunit $DEVSTACK_START_TIME $SECONDS >> ${SUBUNIT_OUTPUT}
     fi
 
     exit $r
@@ -677,6 +682,12 @@ fi
 
 # OpenStack uses a fair number of other projects.
 
+
+# Bring down global requirements before any use of pip_install. This is
+# necessary to ensure that the constraints file is in place before we
+# attempt to apply any constraints to pip installs.
+git_clone $REQUIREMENTS_REPO $REQUIREMENTS_DIR $REQUIREMENTS_BRANCH
+
 # Install package requirements
 # Source it so the entire environment is available
 echo_summary "Installing package prerequisites"
@@ -687,12 +698,31 @@ if [[ "$OFFLINE" != "True" ]]; then
     PYPI_ALTERNATIVE_URL=${PYPI_ALTERNATIVE_URL:-""} $TOP_DIR/tools/install_pip.sh
 fi
 
+# NOTE(tonyb): This should be removed ASAP
+# testtools 2.0.0 was released 2016-02-04 and has a hard requirement on
+# on fixtures >=1.3.0 which isn't compatible with stable/kilo's
+# global-requirements.
+#
+# We can't land an update to requirements to cap testtools as we install
+# testtools (2.0.0) too soon and nothing we install from git in a typical
+# devstack run requires testtools (it's only listed in
+# test-requirements.txt) get 2.0.0.
+#
+# Manually force testtools to match the desired requirements spec until we
+# can:
+# . Land the g-r patch
+# . merge the update and release that in os-testr (stable/kilo)
+pip_install "testtools>=0.9.36,!=1.2.0,<2.0.0"
+
+# Install subunit for the subunit output stream
+pip_install_gr os-testr
+
 TRACK_DEPENDS=${TRACK_DEPENDS:-False}
 
 # Install Python packages into a virtualenv so that we can track them
 if [[ $TRACK_DEPENDS = True ]]; then
     echo_summary "Installing Python packages into a virtualenv $DEST/.venv"
-    pip_install -U virtualenv
+    pip_install -U "virtualenv<14"
 
     rm -rf $DEST/.venv
     virtualenv --system-site-packages $DEST/.venv
